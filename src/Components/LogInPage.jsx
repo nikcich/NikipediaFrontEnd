@@ -5,20 +5,20 @@ import {
     Heading, Spacer, Stack, Input, InputGroup,
     InputRightElement, Flex
 } from "@chakra-ui/react";
-import { useEffect, useState, useContext, useRef } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from 'axios';
 import Cookies from 'js-cookie';
 
 
 const LogInPage = (props) => {
+    const navigate = useNavigate();
+    const [isLoggedIn, setIsLoggedIn] = useState(Cookies.get("loggedIn") || false);
 
-    const { anims, setLoggedIn } = props;
+    const { anims } = props;
     const [show, setShow] = useState(false);
     const [signUp, setSignUp] = useState(false);
     const [loading, setLoading] = useState(false);
-    const navigate = useNavigate();
-    const isLoggedIn = useContext(LoggedInContext);
 
     const [errorMessage, setErrorMessage] = useState('');
 
@@ -30,56 +30,54 @@ const LogInPage = (props) => {
     const SignUpConfirmPassword = useRef();
     const SignUpEmail = useRef();
 
-    const handleShow = () => setShow(!show);
+    const handleShow = () => {
+        setShow(!show);
+    };
 
-    const handleLogIn = () => {
+    const handleLogIn = async () => {
         setLoading(true);
-
-        setTimeout(() => {
+        try {
             const POST_DATA = {
-                type: signUp ? 1 : 0,
                 username: signUp ? SignUpUsername.current.value : LogInUsername.current.value,
                 password: signUp ? SignUpPassword.current.value : LogInPassword.current.value,
                 confirmPassword: SignUpConfirmPassword.current.value,
                 email: SignUpEmail.current.value,
             }
+            const response = await axios.post(signUp ? 'http://localhost:5000/signUp' : 'http://localhost:5000/login', POST_DATA, {
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
 
-            axios.post('http://localhost:8080/login', POST_DATA)
-                .then((response) => {
-                    if (response.data?.error === 'true') {
-                        setErrorMessage(response.data.errorMessage);
-                        return;
-                    }
+            console.log(response);
 
-                    if (!response.data?.cookie) {
-                        setErrorMessage("Error: Invalid Server Response");
-                        return;
-                    }
+            if (response.status != 200) {
+                setErrorMessage("Error processing request");
+                return;
+            }
 
+            if (response.data?.sessionId) {
+                if (!Cookies.get('sessionId')) {
                     const expires = new Date();
                     expires.setTime(expires.getTime() + (60 * 60 * 1000)); // 1 hour from login
-                    Cookies.set('nikipedia_auth', response.data.cookie, { expires: expires });
+                    Cookies.set('sessionId', response.data.sessionId, { expires });
+                }
+            }
 
-                    setLoggedIn(true);
-                    navigate("/home");
+            setIsLoggedIn(true);
+            navigate("/home");
+        } catch (error) {
+            console.log(error);
+        } finally {
+            setLoading(false);
+        }
+    };
 
-                })
-                .catch((error) => {
-                    console.log(error);
-                })
-                .finally(() => {
-                    setLoading(false);
-                });
-        }, 500);
-    }
-
-    // useEffect(() => {
-    //     if (isLoggedIn) {
-    //         //navigate("/home");
-    //     }
-    // }, [isLoggedIn]);
-
-
+    useEffect(() => {
+        if (isLoggedIn) {
+            navigate("/home");
+        }
+    }, [isLoggedIn]);
 
     return (
         <motion.div
@@ -142,8 +140,6 @@ const LogInPage = (props) => {
 
 
             {/* Below is the Sign Up Form, Above is LogIn */}
-
-
 
             <motion.div animate={signUp ? {} : { width: 0 }} transition={signUp ? { delay: 1 } : {}} style={{
                 overflow: 'hidden', width: '100%', height: '100%',
@@ -210,6 +206,6 @@ const LogInPage = (props) => {
 
         </motion.div>
     );
-}
+};
 
 export default LogInPage;

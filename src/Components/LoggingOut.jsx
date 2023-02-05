@@ -1,24 +1,24 @@
 import { useEffect } from "react";
-import useAuth from "../Hooks/useAuth";
 import Cookies from "js-cookie";
 import { useNavigate } from "react-router-dom";
+import { Spinner, Heading } from "@chakra-ui/react";
 
-function LoggingOut(props) {
-
-    const { setLoggedIn } = props;
+const LoggingOut = () => {
     const navigate = useNavigate();
 
     useEffect(() => {
-        Cookies.remove('nikipedia_auth');
-        setLoggedIn(false);
-        navigate('/login');
+        setTimeout(() => {
+            Cookies.remove("sessionId");
+            navigate("/login");
+        }, 1000);
     }, []);
 
     return (
-        <>
-            <h1>Logging you out...</h1>
-        </>
-    )
-}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', width: '100%', flexDirection: 'column', gap: '2rem' }}>
+            <Spinner />
+            <Heading>Logging you out...</Heading>
+        </div>
+    );
+};
 
 export default LoggingOut;

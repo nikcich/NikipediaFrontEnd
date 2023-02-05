@@ -11,18 +11,16 @@ import {
 import { AnimatePresence } from 'framer-motion';
 import { Button } from '@chakra-ui/react';
 import LogInPage from './Components/LogInPage';
-import About from './Components/About';
+import Home from './Components/Home';
 import { useEffect, useState } from 'react';
-import { useContext, createContext } from 'react';
 import LoggingOut from './Components/LoggingOut';
-
-export const LoggedInContext = createContext(null);
+import axios from 'axios';
+import Cookies from 'js-cookie';
 
 function App() {
 
   const location = useLocation();
   const navigate = useNavigate();
-  const [isLoggedin, setIsLoggedIn] = useState(false);
 
   const mass = 0.5;
   const damping = 10;
@@ -63,24 +61,18 @@ function App() {
     }
   }
 
-  useEffect(() => {
-    console.log("Rendering here...");
-  })
 
   return (
     <div className="App">
-      <LoggedInContext.Provider value={isLoggedin}>
-        <AnimatePresence mode="sync" initial={false}>
-          <Button key="b" onClick={() => handleNavigate()}>Click to Toggle Pages</Button>
-          <Routes key="c">
-            <Route exact path="/" element={<h1>Home Page</h1>} />
-            <Route path="/login" element={<LogInPage anims={anim} setLoggedIn={setIsLoggedIn} />} />
-            <Route path="/about" element={<About anims={anim} />} />
-            <Route path="/home" element={<About anims={anim} />} />
-            <Route path="/logout" element={<LoggingOut setLoggedIn={setIsLoggedIn} />} />
-          </Routes>
-        </AnimatePresence>
-      </LoggedInContext.Provider>
+
+      <AnimatePresence mode="sync" initial={false}>
+        <Routes key="c">
+          <Route exact path="/" element={<LoggingOut />} />
+          <Route path="/login" element={<LogInPage anims={anim} />} />
+          <Route path="/home" element={<Home anims={anim} />} />
+          <Route path="/logout" element={<LoggingOut />} />
+        </Routes>
+      </AnimatePresence>
     </div>
   );
 }
